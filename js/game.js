@@ -4,6 +4,9 @@ var background;
 var ground;
 var plane;
 
+var platformWidth = 808;
+var platformHeight = 70;
+
 function preload() {
   game.load.image('background', 'assets/background.png');
   game.load.image('ground', 'assets/ground.png');
@@ -17,20 +20,30 @@ function create() {
   game.physics.p2.setImpactEvents(true);
   game.physics.p2.gravity.y = 200;
 
-  background = game.add.tileSprite(0, 0, game.world.width, game.world.height, 'background');
-  ground = game.add.sprite(404, game.world.height - 35, 'ground');
-  plane = game.add.sprite(game.world.centerX, game.world.centerY, 'plane');
-
-  game.physics.p2.enable([ground, plane]);
-
   var groundCollisionGroup = game.physics.p2.createCollisionGroup();
   var planeCollisionGroup = game.physics.p2.createCollisionGroup();
 
-  ground.body.static = true;
-  ground.body.clearShapes();
-  ground.body.loadPolygon('shapes', 'ground');
-  ground.body.setCollisionGroup(groundCollisionGroup);
-  ground.body.collides(planeCollisionGroup);
+  background = game.add.tileSprite(0, 0, game.world.width, game.world.height, 'background');
+
+  // Set up Ground
+
+  ground = game.add.group();
+
+  for (var i = 0; i < 2; i++) {
+    var platform = ground.create(platformWidth * (i + 0.5), game.world.height - platformHeight / 2, 'ground');
+    game.physics.p2.enable(platform);
+
+    platform.body.static = true;
+    platform.body.clearShapes();
+    platform.body.loadPolygon('shapes', 'ground');
+    platform.body.setCollisionGroup(groundCollisionGroup);
+    platform.body.collides(planeCollisionGroup);
+  }
+
+  // Set up Plane
+
+  plane = game.add.sprite(game.world.centerX, game.world.centerY, 'plane');
+  game.physics.p2.enable(plane);
 
   plane.body.clearShapes();
   plane.body.loadPolygon('shapes', 'plane');
@@ -50,4 +63,13 @@ function create() {
 
 function update() {
   background.tilePosition.x -= 0.25;
+
+  ground.children.forEach(function(platform, index) {
+    platform.body.velocity.x = -200;
+
+    if (platform.x <= platformWidth / -2) {
+      var nextPlatform = ground.children[Math.abs(index - 1)];
+      platform.body.x = nextPlatform.x + platformWidth;
+    }
+  });
 }
