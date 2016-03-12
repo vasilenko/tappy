@@ -13,16 +13,36 @@ function preload() {
 }
 
 function create() {
+  game.physics.startSystem(Phaser.Physics.ARCADE);
+
   background = game.add.tileSprite(0, 0, game.world.width, game.world.height, 'background');
+
   ground = game.add.tileSprite(0, game.world.height - 71, game.world.width, 71, 'ground');
+  game.physics.arcade.enable(ground);
+  ground.body.immovable = true;
 
   plane = game.add.sprite(game.world.centerX, game.world.centerY, 'plane');
   plane.anchor.setTo(0.5, 0.5);
   plane.animations.add('fly', [0, 1, 2, 1], 10, true);
   plane.animations.play('fly');
+
+  game.physics.arcade.enable(plane);
+  plane.body.gravity.y = 200;
+  plane.body.collideWorldBounds = true;
+
+  plane.inputEnabled = true;
+  plane.events.onInputDown.add(tap, this)
 }
 
 function update() {
   background.tilePosition.x -= 0.25;
   ground.tilePosition.x -= 1;
+
+  game.physics.arcade.collide(plane, ground, function() {
+    plane.kill();
+  });
+}
+
+function tap() {
+  plane.body.velocity.y = -200;
 }
